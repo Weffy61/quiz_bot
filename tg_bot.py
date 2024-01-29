@@ -1,5 +1,6 @@
 import logging
 
+import telegram
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from environs import Env
@@ -13,9 +14,12 @@ logger = logging.getLogger(__name__)
 
 def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
+    kb = [['Новый вопрос', 'Сдаться'],
+                       ['Мой счет']]
+    reply_markup = telegram.ReplyKeyboardMarkup(kb)
     update.message.reply_markdown_v2(
-        fr'Hi {user.mention_markdown_v2()}\!',
-        reply_markup=ForceReply(selective=True),
+        fr'Привет {user.mention_markdown_v2()}\! я бот для викторин',
+        reply_markup=reply_markup,
     )
 
 
