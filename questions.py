@@ -1,3 +1,5 @@
+import random
+
 
 def get_questions(file_path):
     with open(file_path, 'r', encoding='KOI8-R') as file:
@@ -17,4 +19,7 @@ def get_questions(file_path):
     return questions
 
 
-print(get_questions('questions/1vs1200.txt'))
+def get_randon_question():
+    questions = get_questions('questions/1vs1200.txt')
+    question, answer = random.choice(list(questions.items()))
+    return question, answer

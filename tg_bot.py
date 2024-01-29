@@ -5,6 +5,8 @@ from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from environs import Env
 
+from questions import get_randon_question
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
@@ -28,7 +30,9 @@ def help_command(update: Update, context: CallbackContext) -> None:
 
 
 def echo(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text(update.message.text)
+    if update.message.text == 'Новый вопрос':
+        question, answer = get_randon_question()
+        update.message.reply_text(question)
 
 
 def main() -> None:
