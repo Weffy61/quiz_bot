@@ -12,7 +12,7 @@ def get_questions(file_path):
         if 'Вопрос' in split_content[question_number]:
             question_title, question = split_content[question_number].split(':\n')
             answer_title, answer = split_content[question_number + 1].split(':\n')
-            questions[question] = answer
+            questions[question] = answer.replace("\n", " ").rstrip(' ')
         elif 'Автор' in split_content[question_number] or 'Источник' in split_content[question_number] or 'Ответ' in \
                 split_content[question_number]:
             continue
@@ -22,4 +22,11 @@ def get_questions(file_path):
 def get_randon_question():
     questions = get_questions('questions/1vs1200.txt')
     question, answer = random.choice(list(questions.items()))
+    if '.' in answer:
+        answer = answer.split('.')[0]
+    if '(' in answer:
+        answer = answer.split('(')[0]
     return question, answer
+
+
+
