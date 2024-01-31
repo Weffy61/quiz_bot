@@ -1,4 +1,3 @@
-import argparse
 import logging
 import random
 
@@ -9,20 +8,12 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 import telegram
 import redis
 
+from parse_path import parse_question_path
 from questions import get_random_question
 from notifications import TelegramLogsHandler, handle_error
 
 
 logger = logging.getLogger('Telegram logger')
-
-
-def parse_question_path():
-    parser = argparse.ArgumentParser(
-        description='Запуск бота викторины'
-    )
-    parser.add_argument('-p', '--path', help='Путь к файлу с вопросами', default='questions/1vs1200.txt')
-    args = parser.parse_args()
-    return args.path
 
 
 def get_new_question(event, vk_api, redis_connect, keyboard, path):
