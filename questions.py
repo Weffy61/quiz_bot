@@ -19,8 +19,8 @@ def get_questions(file_path):
     return questions
 
 
-def get_randon_question():
-    questions = get_questions('questions/1vs1200.txt')
+def get_random_question(path):
+    questions = get_questions(path)
     question, answer = random.choice(list(questions.items()))
     if '.' in answer:
         answer = answer.split('.')[0]
