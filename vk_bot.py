@@ -59,6 +59,14 @@ def handle_event(event, vk_api, redis_connect, keyboard, questions_path):
         give_up(event, vk_api, redis_connect, keyboard, questions_path)
     elif event.text == 'Новый вопрос':
         get_new_question(event, vk_api, redis_connect, keyboard, questions_path)
+    elif event.type == VkEventType.MESSAGE_NEW and event.to_me and not redis_db.exists(event.user_id):
+        vk.messages.send(
+            user_id=event.user_id,
+            message='Для получения вопроса нажми «Новый вопрос',
+            random_id=random.randint(1, 1000),
+            keyboard=kb.get_keyboard()
+        )
+
     else:
         reply(event, vk_api, redis_connect, keyboard)
 
@@ -97,16 +105,8 @@ if __name__ == "__main__":
             kb.add_line()
             kb.add_button('Мой счет')
             for event in longpoll.listen():
-                if event.type == VkEventType.MESSAGE_NEW and event.to_me and redis_db.exists(event.user_id):
+                if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                     handle_event(event, vk, redis_db, kb, questions_path)
-                elif event.type == VkEventType.MESSAGE_NEW and event.to_me and not redis_db.exists(event.user_id):
-                    vk.messages.send(
-                        user_id=event.user_id,
-                        message='Для получения вопроса нажми «Новый вопрос',
-                        random_id=random.randint(1, 1000),
-                        keyboard=kb.get_keyboard()
-                    )
-
         except Exception as e:
             handle_error(e)
             continue
