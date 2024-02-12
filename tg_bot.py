@@ -36,36 +36,31 @@ def help_command(update: Update, context: CallbackContext) -> None:
 
 
 def handle_new_question_request(update: Update, context: CallbackContext):
-    try:
-        redis_db: redis.Redis = context.bot_data.get('redis')
-        questions = context.bot_data.get('questions')
-        question, answer = get_random_question(questions)
-        redis_db.set(update.effective_user.id, answer.strip())
-        update.message.reply_text(question)
-        return QuizState.ANSWER
-    except Exception as e:
-        handle_error(e)
+    redis_db: redis.Redis = context.bot_data.get('redis')
+    questions = context.bot_data.get('questions')
+    question, answer = get_random_question(questions)
+    redis_db.set(update.effective_user.id, answer.strip())
+    update.message.reply_text(question)
+    return QuizState.ANSWER
 
 
 def give_up(update: Update, context: CallbackContext):
-    try:
-        redis_db: redis.Redis = context.bot_data.get('redis')
-        update.message.reply_text(f'Ответ: {redis_db.get(update.effective_user.id).decode()}')
-        handle_new_question_request(update, context)
-    except Exception as e:
-        handle_error(e)
+    redis_db: redis.Redis = context.bot_data.get('redis')
+    update.message.reply_text(f'Ответ: {redis_db.get(update.effective_user.id).decode()}')
+    handle_new_question_request(update, context)
 
 
 def handle_solution_attempt(update: Update, context: CallbackContext):
-    try:
-        redis_db: redis.Redis = context.bot_data.get('redis')
-        if update.message.text.lower() == redis_db.get(update.effective_user.id).decode().lower():
-            update.message.reply_text('Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос')
-            return ConversationHandler.END
-        update.message.reply_text('Неправильно… Попробуешь ещё раз?')
-        return QuizState.ANSWER
-    except Exception as e:
-        handle_error(e)
+    redis_db: redis.Redis = context.bot_data.get('redis')
+    if update.message.text.lower() == redis_db.get(update.effective_user.id).decode().lower():
+        update.message.reply_text('Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос')
+        return ConversationHandler.END
+    update.message.reply_text('Неправильно… Попробуешь ещё раз?')
+    return QuizState.ANSWER
+
+
+def error_handler(update, context):
+    handle_error(context.error)
 
 
 def main():
@@ -96,6 +91,7 @@ def main():
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
+    dispatcher.add_error_handler(error_handler)
     conv_handler = ConversationHandler(
         entry_points=[MessageHandler(Filters.regex('^Новый вопрос$'), handle_new_question_request)],
         states={
