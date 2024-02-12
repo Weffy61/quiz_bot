@@ -10,8 +10,7 @@ import redis
 
 from notifications import TelegramLogsHandler, handle_error
 from parse_path import parse_question_path
-from questions import get_random_question
-
+from questions import get_random_question, get_questions
 
 logger = logging.getLogger('Telegram logger')
 
@@ -39,9 +38,9 @@ def help_command(update: Update, context: CallbackContext) -> None:
 def handle_new_question_request(update: Update, context: CallbackContext):
     try:
         redis_db: redis.Redis = context.bot_data.get('redis')
-        questions_path = context.bot_data.get('questions_path')
-        question, answer = get_random_question(questions_path)
-        redis_db.set(update.effective_user.id, answer)
+        questions = context.bot_data.get('questions')
+        question, answer = get_random_question(questions)
+        redis_db.set(update.effective_user.id, answer.strip())
         update.message.reply_text(question)
         return QuizState.ANSWER
     except Exception as e:
@@ -73,6 +72,7 @@ def main():
     questions_path = parse_question_path()
     env = Env()
     env.read_env()
+    questions = get_questions(questions_path)
     token = env.str('TELEGRAM_TOKEN')
     updater = Updater(token)
     redis_host = env.str('REDIS_HOST')
@@ -108,7 +108,7 @@ def main():
         fallbacks=[],
     )
     dispatcher.bot_data['redis'] = redis_db
-    dispatcher.bot_data['questions_path'] = questions_path
+    dispatcher.bot_data['questions'] = questions
     dispatcher.add_handler(conv_handler)
     while True:
         try:

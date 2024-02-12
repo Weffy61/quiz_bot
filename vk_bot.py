@@ -9,16 +9,16 @@ import telegram
 import redis
 
 from parse_path import parse_question_path
-from questions import get_random_question
+from questions import get_random_question, get_questions
 from notifications import TelegramLogsHandler, handle_error
 
 
 logger = logging.getLogger('Telegram logger')
 
 
-def get_new_question(event, vk_api, redis_connect, keyboard, path):
-    question, answer = get_random_question(path)
-    redis_connect.set(event.user_id, answer)
+def get_new_question(event, vk_api, redis_connect, keyboard, questions):
+    question, answer = get_random_question(questions)
+    redis_connect.set(event.user_id, answer.strip())
     vk_api.messages.send(
         user_id=event.user_id,
         message=question,
@@ -27,14 +27,14 @@ def get_new_question(event, vk_api, redis_connect, keyboard, path):
     )
 
 
-def give_up(event, vk_api, redis_connect, keyboard, path):
+def give_up(event, vk_api, redis_connect, keyboard, questions):
     vk_api.messages.send(
         user_id=event.user_id,
         message=f'Ответ: {redis_connect.get(event.user_id).decode()}',
         random_id=random.randint(1, 1000),
         keyboard=keyboard.get_keyboard()
     )
-    get_new_question(event, vk_api, redis_connect, keyboard, path)
+    get_new_question(event, vk_api, redis_connect, keyboard, questions)
 
 
 def reply(event, vk_api, redis_connect, keyboard):
@@ -54,11 +54,11 @@ def reply(event, vk_api, redis_connect, keyboard):
         )
 
 
-def handle_event(event, vk_api, redis_connect, keyboard, questions_path):
+def handle_event(event, vk_api, redis_connect, keyboard, questions):
     if event.text == 'Сдаться':
-        give_up(event, vk_api, redis_connect, keyboard, questions_path)
+        give_up(event, vk_api, redis_connect, keyboard, questions)
     elif event.text == 'Новый вопрос':
-        get_new_question(event, vk_api, redis_connect, keyboard, questions_path)
+        get_new_question(event, vk_api, redis_connect, keyboard, questions)
     elif event.type == VkEventType.MESSAGE_NEW and event.to_me and not redis_db.exists(event.user_id):
         vk.messages.send(
             user_id=event.user_id,
@@ -75,6 +75,7 @@ if __name__ == "__main__":
     questions_path = parse_question_path()
     env = Env()
     env.read_env()
+    questions = get_questions(questions_path)
     redis_host = env.str('REDIS_HOST')
     redis_port = env.str('REDIS_POST')
     redis_password = env.str('REDIS_PASSWORD')
@@ -106,7 +107,7 @@ if __name__ == "__main__":
             kb.add_button('Мой счет')
             for event in longpoll.listen():
                 if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-                    handle_event(event, vk, redis_db, kb, questions_path)
+                    handle_event(event, vk, redis_db, kb, questions)
         except Exception as e:
             handle_error(e)
             continue

@@ -19,8 +19,7 @@ def get_questions(file_path):
     return questions
 
 
-def get_random_question(path):
-    questions = get_questions(path)
+def get_random_question(questions):
     question, answer = random.choice(list(questions.items()))
     if '.' in answer:
         answer = answer.split('.')[0]
