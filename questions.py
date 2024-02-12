@@ -8,13 +8,13 @@ def get_questions(file_path):
     split_content = file_content.split('\n\n')
     questions = {}
 
-    for question_number in range(len(split_content))[3:]:
-        if 'Вопрос' in split_content[question_number]:
-            question_title, question = split_content[question_number].split(':\n')
-            answer_title, answer = split_content[question_number + 1].split(':\n')
+    for content in split_content[3:]:
+        if 'Вопрос' in content:
+            question_title, question = content.split(':\n')
+            answer_title, answer = split_content[split_content.index(content) + 1].split(':\n')
             questions[question] = answer.replace("\n", " ").rstrip(' ')
-        elif 'Автор' in split_content[question_number] or 'Источник' in split_content[question_number] or 'Ответ' in \
-                split_content[question_number]:
+
+        elif content in ('Автор', 'Источник', 'Ответ'):
             continue
     return questions
 
